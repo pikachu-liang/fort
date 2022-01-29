@@ -24,9 +24,9 @@ func queryHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	flag.Parse()
-	store := store.NewBoltStore()
-	store.Init(*dataDir)
-	_ = store.Put([]byte("hello"), []byte("world"))
+	kvstore, _ := store.NewBBoltStore(store.BBoltStoreDefaultOptions)
+	_ = kvstore.Set("hello", []byte("world"))
+	_ = dataDir
 
 	http.HandleFunc("/", queryHandler)
 	if err := http.ListenAndServe("127.0.0.1:8080", nil); err != nil {

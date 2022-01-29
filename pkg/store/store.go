@@ -1,9 +1,16 @@
 package store
 
+import "errors"
+
 type Store interface {
-	Init(datadir string)
+	Set(k string, v []byte) error
+	Get(k string) (v []byte, err error)
+	Delete(k string) error
 	Close() error
-	Get(key []byte) (val []byte, err error)
-	Put(key []byte, val []byte) error
-	Delete(key []byte) error
 }
+
+var (
+	ErrKeyNotFound = errors.New("key not found")
+	ErrKeyInvalid  = errors.New("key can not be empty")
+	ErrValInvalid  = errors.New("value can not be nil")
+)
