@@ -151,7 +151,8 @@ func (rc *raftNode) publishEntries(ents []raftpb.Entry) (<-chan struct{}, bool) 
 			data = append(data, s)
 		case raftpb.EntryConfChange:
 			var cc raftpb.ConfChange
-			cc.Unmarshal(ents[i].Data)
+			// TODO: err check if Unmarshal failed
+			_ = cc.Unmarshal(ents[i].Data)
 			rc.confState = *rc.node.ApplyConfChange(cc)
 			switch cc.Type {
 			case raftpb.ConfChangeAddNode:
@@ -237,13 +238,15 @@ func (rc *raftNode) replayWAL() *wal.WAL {
 		log.Fatalf("raftexample: failed to read WAL (%v)", err)
 	}
 	rc.raftStorage = raft.NewMemoryStorage()
+
+	// TODO: err check if ApplySnapshot/SetHardState/Append failed
 	if snapshot != nil {
-		rc.raftStorage.ApplySnapshot(*snapshot)
+		_ = rc.raftStorage.ApplySnapshot(*snapshot)
 	}
-	rc.raftStorage.SetHardState(st)
+	_ = rc.raftStorage.SetHardState(st)
 
 	// append to storage so raft starts at the right place in log
-	rc.raftStorage.Append(ents)
+	_ = rc.raftStorage.Append(ents)
 
 	return w
 }
@@ -300,7 +303,8 @@ func (rc *raftNode) startRaft() {
 		ErrorC:      make(chan error),
 	}
 
-	rc.transport.Start()
+	// TODO: err check if transport start failed
+	_ = rc.transport.Start()
 	for i := range rc.peers {
 		if i+1 != rc.id {
 			rc.transport.AddPeer(types.ID(i+1), []string{rc.peers[i]})
@@ -409,7 +413,8 @@ func (rc *raftNode) serveChannels() {
 					rc.proposeC = nil
 				} else {
 					// blocks until accepted by raft state machine
-					rc.node.Propose(context.TODO(), []byte(prop))
+					// TODO: error check if Propose failed
+					_ = rc.node.Propose(context.TODO(), []byte(prop))
 				}
 
 			case cc, ok := <-rc.confChangeC:
@@ -418,7 +423,8 @@ func (rc *raftNode) serveChannels() {
 				} else {
 					confChangeCount++
 					cc.ID = confChangeCount
-					rc.node.ProposeConfChange(context.TODO(), cc)
+					// TODO: error check if ProposeConfChange failed
+					_ = rc.node.ProposeConfChange(context.TODO(), cc)
 				}
 			}
 		}
@@ -434,13 +440,16 @@ func (rc *raftNode) serveChannels() {
 
 		// store raft entries to wal, then publish over commit channel
 		case rd := <-rc.node.Ready():
-			rc.wal.Save(rd.HardState, rd.Entries)
+			// TODO: error check if wal Save failed
+			_ = rc.wal.Save(rd.HardState, rd.Entries)
 			if !raft.IsEmptySnap(rd.Snapshot) {
-				rc.saveSnap(rd.Snapshot)
-				rc.raftStorage.ApplySnapshot(rd.Snapshot)
+				// TODO: error check if saveSnap/ApplySnapshot failed
+				_ = rc.saveSnap(rd.Snapshot)
+				_ = rc.raftStorage.ApplySnapshot(rd.Snapshot)
 				rc.publishSnapshot(rd.Snapshot)
 			}
-			rc.raftStorage.Append(rd.Entries)
+			// TODO: error check if Append failed
+			_ = rc.raftStorage.Append(rd.Entries)
 			rc.transport.Send(rd.Messages)
 			applyDoneC, ok := rc.publishEntries(rc.entriesToApply(rd.CommittedEntries))
 			if !ok {

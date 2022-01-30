@@ -34,7 +34,7 @@ func (h *httpKVAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	case http.MethodGet:
 		if v, ok := h.store.Lookup(key); ok {
-			w.Write([]byte(v))
+			_, _ = w.Write([]byte(v))
 		} else {
 			http.Error(w, "Failed to GET", http.StatusNotFound)
 		}
