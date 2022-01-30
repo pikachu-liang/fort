@@ -1,11 +1,14 @@
 # Fort
 
-Yet another distributed transactional key-value database
+Yet another distributed key-value database
 
-Fort is a distributed transactional key-value store, with a focus on:
+Fort is a distributed key-value store, with a focus on:
 
-* cluster level distributed transaction
-* heterogeneous node aware data placement
+* heterogeneous nodes/workloads aware segments placement
+* live segments split/merge/migration with zero downtime
+
+Potentially:
+* Add a transaction layer to support distributed transaction.
 
 ### Technologies used:
 * [Etcd](https://github.com/etcd-io/etcd) for storing metadata and notification
